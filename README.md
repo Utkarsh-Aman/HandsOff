@@ -1,10 +1,8 @@
 # HandsOff
 
-Control your desktop cursor with hand gestures from a webcam. A small,
-readable learning project: MediaPipe finds the hand, a few geometric rules
-turn landmarks into gestures, and pyautogui drives the mouse.
+Control your desktop cursor with hand gestures from a webcam. 
+project: MediaPipe finds the hand, a few geometric rules turn landmarks into gestures, and pyautogui drives the mouse.
 
-No ML training, no datasets, no config files. Just rules on 21 points.
 
 ## Gestures
 
@@ -46,7 +44,7 @@ Requires [uv](https://docs.astral.sh/uv/). It will fetch Python 3.11 for you
 if the machine doesn't have it.
 
 ```bash
-git clone <this repo>
+git clone https://github.com/Utkarsh-Aman/HandsOff
 cd HandsOff
 uv sync
 ```
@@ -59,7 +57,7 @@ That creates `.venv/` and installs the exact versions pinned in `uv.lock`.
 Python 3.11 or newer already installed.
 
 ```bash
-git clone <this repo>
+git clone https://github.com/Utkarsh-Aman/HandsOff
 cd HandsOff
 python -m venv .venv
 .venv\Scripts\activate        # Windows
