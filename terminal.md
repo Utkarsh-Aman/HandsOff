@@ -182,11 +182,47 @@ build session because it takes over the mouse.
 
 ---
 
+## 12. Add the second control scheme (later session)
+
+No new dependencies were needed. Files changed or added:
+
+- `src/handsoff/gestures.py`: added FIST, MIDDLE_FINGER and HAND_DOWN poses,
+  renamed RIGHT_PINCH to MIDDLE_PINCH (it is a shape, not an action).
+- `src/handsoff/actions.py` (new): pose -> action mapping for each scheme,
+  plus the double-fist and hold-to-quit timers.
+- `src/handsoff/config.py`: `SCHEME`, `FIST_RATIO`, `DOUBLE_FIST_WINDOW`,
+  `QUIT_HOLD_SECONDS`.
+- `src/handsoff/controller.py`: `page_up()`.
+- `src/handsoff/main.py`: `--scheme` flag; loop now drives the controller
+  from an `Actions` object.
+- `tests/test_actions.py` (new), `tests/test_gestures.py` (updated).
+
+```bash
+uv run pytest -q
+```
+
+**Why:** the pose rules gained three new cases and a new ordering, and the
+mapper has time-based logic. Both are covered by tests that fake the clock,
+so this one command verifies everything without a webcam. Result: 31 passed.
+
+```bash
+uv run handsoff --help
+uv run python -c "from handsoff.main import main; from handsoff.actions import ActionMapper; print(ActionMapper('fist').cursor_landmark)"
+```
+
+**Why:** confirm the `--scheme {pinch,fist}` flag is registered by argparse
+and that the new module imports cleanly alongside the old ones. As before,
+the app itself was not launched from the build session because it takes
+over the mouse.
+
+---
+
 ## Commands you will use day to day
 
 ```bash
 uv sync           # create/refresh .venv from uv.lock
-uv run handsoff   # run the app
+uv run handsoff                # run the app (pinch scheme)
+uv run handsoff --scheme fist  # run with the fist scheme
 uv run pytest     # run the tests
 uv add <pkg>      # add a dependency (updates pyproject.toml and uv.lock)
 ```

@@ -1,4 +1,4 @@
-"""Unit tests for the pure gesture rules. No webcam or MediaPipe needed.
+"""Unit tests for the pure pose rules. No webcam or MediaPipe needed.
 
 Each test builds a fake hand from 21 hand-picked coordinates and checks the
 classifier's answer. Because classify() is a pure function, that is the whole
@@ -25,11 +25,12 @@ from handsoff.gestures import (
 def make_hand(*, index=False, middle=False, ring=False, pinky=False, pinch_with=None):
     """Build a synthetic upright hand as 21 (x, y) landmarks.
 
-    Wrist sits at the bottom, index base 0.3 above it (palm length 0.3).
+    Wrist sits at the bottom, index knuckle 0.3 above it (palm length 0.3).
     Each finger's PIP joint is at y=0.5; its tip is above (0.3) when the finger
-    is "up" or below (0.7) when curled. Landmarks we don't care about are left
-    at the wrist position. `pinch_with` puts the thumb tip almost on top of
-    the named fingertip index.
+    is "up" or curled back near the wrist (0.75) when down, which also keeps
+    it inside the fist radius. Landmarks we don't care about are left at the
+    wrist position. `pinch_with` puts the thumb tip almost on top of the named
+    fingertip index.
     """
     pts = [(0.5, 0.9)] * 21
     pts[WRIST] = (0.5, 0.9)
@@ -44,7 +45,7 @@ def make_hand(*, index=False, middle=False, ring=False, pinky=False, pinch_with=
     ]
     for tip, pip, x, up in fingers:
         pts[pip] = (x, 0.5)
-        pts[tip] = (x, 0.3 if up else 0.7)
+        pts[tip] = (x, 0.3 if up else 0.75)
 
     if pinch_with is not None:
         tx, ty = pts[pinch_with]
@@ -64,8 +65,12 @@ def test_index_and_middle_is_scroll():
     assert classify(make_hand(index=True, middle=True)) == Gesture.SCROLL
 
 
-def test_fist_is_none():
-    assert classify(make_hand()) == Gesture.NONE
+def test_middle_only_is_middle_finger():
+    assert classify(make_hand(middle=True)) == Gesture.MIDDLE_FINGER
+
+
+def test_all_fingers_curled_is_fist():
+    assert classify(make_hand()) == Gesture.FIST
 
 
 def test_open_palm_is_none():
@@ -76,13 +81,28 @@ def test_thumb_touching_index_is_pinch():
     assert classify(make_hand(index=True, pinch_with=INDEX_TIP)) == Gesture.PINCH
 
 
-def test_thumb_touching_middle_is_right_pinch():
-    assert classify(make_hand(middle=True, pinch_with=MIDDLE_TIP)) == Gesture.RIGHT_PINCH
+def test_thumb_touching_middle_is_middle_pinch():
+    assert classify(make_hand(middle=True, pinch_with=MIDDLE_TIP)) == Gesture.MIDDLE_PINCH
 
 
 def test_pinch_wins_over_finger_pattern():
     # Index + middle up would be SCROLL, but a pinch is checked first.
     assert classify(make_hand(index=True, middle=True, pinch_with=INDEX_TIP)) == Gesture.PINCH
+
+
+def test_fist_wins_over_pinch():
+    # In a real fist the thumb often rests on the curled index finger, which
+    # the pinch rule alone would misread. The fist rule is checked first.
+    hand = make_hand()
+    hand[THUMB_TIP] = hand[INDEX_TIP]
+    assert classify(hand) == Gesture.FIST
+
+
+def test_fingers_below_wrist_is_hand_down():
+    hand = make_hand(index=True, middle=True, ring=True, pinky=True)
+    # Flip the hand: put every fingertip and joint *below* the wrist.
+    hand = [(x, 1.8 - y) if i != WRIST else (x, y) for i, (x, y) in enumerate(hand)]
+    assert classify(hand) == Gesture.HAND_DOWN
 
 
 def test_pinch_is_scale_invariant():

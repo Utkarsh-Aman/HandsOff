@@ -22,11 +22,24 @@ MODEL_URL = (
 )
 MODEL_PATH = Path(__file__).resolve().parents[2] / "models" / "hand_landmarker.task"
 
+# --- Control scheme -------------------------------------------------------
+# Which poses do the clicking. Override per run with `uv run handsoff --scheme fist`.
+#   "pinch": thumb+index pinch = left button, thumb+middle pinch = right click
+#   "fist":  fist = left button, two quick fists = right click,
+#            hand pointing down = Page Up, middle finger held 2 s = quit
+SCHEME = "pinch"
+
 # --- Gesture thresholds ---------------------------------------------------
-# A pinch is "thumb tip close to a fingertip". Distances are measured relative
-# to palm size so the rule works whether the hand is near or far from the
-# camera (see gestures.py for the normalisation).
-PINCH_RATIO = 0.35          # fraction of palm length; lower = must pinch tighter
+# Distances are measured relative to palm size (wrist to index knuckle) so
+# the rules work whether the hand is near or far from the camera.
+PINCH_RATIO = 0.35          # thumb-to-fingertip gap, as a fraction of palm length;
+                            # lower = must pinch tighter
+FIST_RATIO = 1.0            # every fingertip must be within this many palm lengths
+                            # of the wrist to count as a fist; extended fingers are ~1.5
+
+# --- Timing (seconds) -----------------------------------------------------
+DOUBLE_FIST_WINDOW = 1.0    # two fists must *start* within this gap to be a right click
+QUIT_HOLD_SECONDS = 2.0     # how long the middle finger must stay raised to quit
 
 # --- Cursor mapping and smoothing ----------------------------------------
 # Only the central part of the camera frame is mapped to the screen. Without

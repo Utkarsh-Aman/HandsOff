@@ -51,6 +51,10 @@ class DesktopController:
         if clicks != 0:
             pyautogui.scroll(clicks)
 
+    def page_up(self) -> None:
+        """Press the Page Up key once."""
+        pyautogui.press("pageup")
+
     def release_all(self) -> None:
         """Make sure no button is left held down when the program exits."""
         self.set_left_button(False)
